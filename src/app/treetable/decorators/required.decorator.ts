@@ -12,6 +12,7 @@ export function Required(target: Object, property: string): void {
       Object.defineProperty(target, property, {
         value,
         writable: true,
+        enumerable: true,
         configurable: true
       });
     },

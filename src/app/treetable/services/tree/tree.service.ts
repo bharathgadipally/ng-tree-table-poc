@@ -28,7 +28,7 @@ export class TreeService {
    * @param id the id of the node to be retrieved
    */
   searchById<T, K extends SearchableNode<T>>(root: K, id: string): Option<NodeInTree<T>> {
-    let matchingNode: K;
+    let matchingNode!: K;
     const pathToRoot: {[k: string]: K} = {};
     this._traverse(root, (node: K) => {
       node.children.forEach(child => {
@@ -56,7 +56,7 @@ export class TreeService {
     if (!f(root)) {
       return;
     }
-    root.children.forEach(c => this._traverse(c, f));
+    root.children.forEach(c => this._traverse(c as K, f));
   }
 
   /**
@@ -94,10 +94,10 @@ export class TreeService {
     let key = id;
     while (key) {
       if (pathMap[key]) {
-        pathToRoot.push(pathMap[key]);
+        pathToRoot.push(pathMap[key] as never);
         key = pathMap[key].id;
       } else {
-        key = null;
+        key = null!;
       }
     }
     return pathToRoot;

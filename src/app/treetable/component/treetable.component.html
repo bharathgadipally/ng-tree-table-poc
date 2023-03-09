@@ -9,14 +9,33 @@
         <div *ngIf="isFirst">
           <div class="value-cell">
             <div [innerHTML]="formatIndentation(element)"></div>
-            <mat-icon [ngStyle]="{'visibility': element.children.length ? 'visible' : 'hidden'}" (click)="onNodeClick(element)">
-              {{element.isExpanded ? 'keyboard_arrow_down' : 'keyboard_arrow_right'}}
+            <mat-icon style="color:#039be5 !important" [ngStyle]="{'visibility': element.children.length ? 'visible' : 'hidden'}" (click)="onNodeClick(element)">              
+              {{element.isExpanded ? 'remove_circle' : 'add_circle'}}
             </mat-icon>
-            <div>{{element.value[column]}}</div>
+            &nbsp;
+            <mat-checkbox *ngIf="column === 'startDateTime'" [checked]="element.value['selected']"
+            [indeterminate]="element.value['indeterminate'] && !element.value['selected']"
+            [disabled]="element.value['isPrimaryKeyEvent']">
+            </mat-checkbox>
+            <div style="padding-left: 20px;">{{element.value[column]  | date:'shortDate' }}</div>
           </div>
         </div>
-        <div *ngIf="!isFirst">
-          {{element.value[column]}}
+        <div *ngIf="!isFirst && column != 'startDateTime' && column != 'action'">
+          {{(column == "recalculatedDate") ? (element.value[column] | date:'shortDate') : element.value[column] }}
+        </div>
+        <div *ngIf="column === 'action'">
+          <mat-select [(ngModel)]=element.value[column] [disabled]="element.value[column] == 'I'">
+            <mat-option value="I" [ngStyle]="{ display : element.value[column] != 'I' ? 'none' : 'block' }">New</mat-option>
+            <mat-option value="U">Update</mat-option>
+            <mat-option value="D" [ngStyle]="{ display : element.value['isPrimaryKeyEvent'] ? 'none' : 'block' }">Delete</mat-option>
+          </mat-select>
+        </div>
+        <div *ngIf="!isFirst && column === 'startDateTime'">
+          <mat-checkbox [checked]="element.value['selected']"
+                      [indeterminate]="element.value['indeterminate'] && !element.value['selected']"
+                      [disabled]="element.value['isPrimaryKeyEvent']">
+                      </mat-checkbox>
+          <span>{{element.value[column]  | date:'shortDate'}}</span>
         </div>
       </td>
     </ng-container>

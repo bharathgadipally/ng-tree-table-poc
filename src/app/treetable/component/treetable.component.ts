@@ -1,13 +1,13 @@
 import { Component, OnInit, Input, Output, ElementRef } from '@angular/core';
 import { Node, TreeTableNode, Options, SearchableNode } from '../models';
 import { TreeService } from '../services/tree/tree.service';
-import { MatTableDataSource } from '@angular/material';
 import { ValidatorService } from '../services/validator/validator.service';
 import { ConverterService } from '../services/converter/converter.service';
 import { defaultOptions } from '../default.options';
 import { flatMap, defaults } from 'lodash-es';
 import { Required } from '../decorators/required.decorator';
 import { Subject } from 'rxjs';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'ng-treetable, treetable', // 'ng-treetable' is currently being deprecated
@@ -38,12 +38,12 @@ export class TreetableComponent<T> implements OnInit {
   ngOnInit() {
     this.tree = Array.isArray(this.tree) ? this.tree : [this.tree];
     this.options = this.parseOptions(defaultOptions);
-    const customOrderValidator = this.validatorService.validateCustomOrder(this.tree[0], this.options.customColumnOrder);
-    if (this.options.customColumnOrder && !customOrderValidator.valid) {
-      throw new Error(`
-        Properties ${customOrderValidator.xor.map(x => `'${x}'`).join(', ')} incorrect or missing in customColumnOrder`
-      );
-    }
+    const customOrderValidator = this.validatorService.validateCustomOrder(this.tree[0] as unknown as Node<{ [x: string]: {}; }>, this.options.customColumnOrder!);
+    // if (this.options.customColumnOrder && !customOrderValidator.valid) {
+    //   throw new Error(`
+    //     Properties ${customOrderValidator.xor.map(x => `'${x}'`).join(', ')} incorrect or missing in customColumnOrder`
+    //   );
+    // }
     this.displayedColumns = this.options.customColumnOrder
       ? this.options.customColumnOrder
       : this.extractNodeProps(this.tree[0]);
@@ -53,8 +53,15 @@ export class TreetableComponent<T> implements OnInit {
     this.dataSource = this.generateDataSource();
   }
 
-  extractNodeProps(tree: Node<T> & { value: { [k: string]: any } }): string[] {
-    return Object.keys(tree.value).filter(x => typeof tree.value[x] !== 'object');
+  extractNodeProps(tree: Node<T> | { value: { [k: string]: any } }): string[] {
+    let props =  Object.keys(tree.value).filter(x => typeof tree.value[x] !== 'object'
+                                              && ( x == "startDateTime"
+                                              || x == "recalculatedDate"
+                                              || x == "description"
+                                              || x == "authority"
+                                              || x == "calculationSummary"));
+    props.push("action");
+    return props;
   }
 
   generateDataSource(): MatTableDataSource<TreeTableNode<T>> {
@@ -62,7 +69,7 @@ export class TreetableComponent<T> implements OnInit {
   }
 
   formatIndentation(node: TreeTableNode<T>, step: number = 5): string {
-    return '&nbsp;'.repeat(node.depth * step);
+    return '&nbsp;&nbsp;'.repeat(node.depth * step);
   }
 
 	formatElevation(): string {
@@ -75,7 +82,7 @@ export class TreetableComponent<T> implements OnInit {
       el.isVisible = this.searchableTree.every(st => {
         return this.treeService.searchById(st, el.id).
           fold([], n => n.pathToRoot)
-          .every(p => this.treeTable.find(x => x.id === p.id).isExpanded);
+          .every(p => this.treeTable?.find(x => x.id === p.id)?.isExpanded);
       });
     });
     this.dataSource = this.generateDataSource();

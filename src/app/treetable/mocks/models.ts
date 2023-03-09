@@ -12,6 +12,7 @@ export interface Task {
 }
 
 export interface TriggerEventsNode {
+  children?:TriggerEventsNode[];
   expandable: boolean;
   startDateTime: Date;
   endDateTime: Date;
